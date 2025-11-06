@@ -138,27 +138,27 @@ async function loadAllData() {
 // Navigation
 function showView(viewId) {
   // Ocultar todas las vistas
-  document.querySelectorAll('.view').forEach(view => {
-    view.classList.remove('active');
+  document.querySelectorAll(".view").forEach((view) => {
+    view.classList.remove("active");
   });
-  
+
   // Mostrar la vista seleccionada
   const targetView = document.getElementById(viewId);
   if (targetView) {
-    targetView.classList.add('active');
+    targetView.classList.add("active");
   }
-  
+
   // Actualizar botones de navegación
-  document.querySelectorAll('.nav-btn').forEach(btn => {
-    btn.classList.remove('active');
+  document.querySelectorAll(".nav-btn").forEach((btn) => {
+    btn.classList.remove("active");
   });
-  
+
   // Activar el botón correspondiente
   const activeBtn = document.querySelector(`.nav-btn[onclick*="${viewId}"]`);
   if (activeBtn) {
-    activeBtn.classList.add('active');
+    activeBtn.classList.add("active");
   }
-  
+
   // Cerrar menú móvil si está abierto
   const nav = document.getElementById("mainNav");
   if (nav && nav.classList.contains("mobile-open")) {
@@ -2004,19 +2004,19 @@ document.addEventListener("DOMContentLoaded", function () {
   // Asegurar que las funciones globales estén disponibles
   window.toggleMobileMenu = toggleMobileMenu;
   window.closeMobileMenu = closeMobileMenu;
-  
+
   // Debug info
   console.log("Menú responsive inicializado");
   console.log("toggleMobileMenu disponible:", typeof window.toggleMobileMenu);
-  
+
   // Verificar elementos
   const nav = document.getElementById("mainNav");
   const hamburger = document.querySelector(".hamburger");
   const overlay = document.getElementById("mobileOverlay");
-  
+
   console.log("Elementos encontrados:", {
     nav: !!nav,
     hamburger: !!hamburger,
-    overlay: !!overlay
+    overlay: !!overlay,
   });
 });
