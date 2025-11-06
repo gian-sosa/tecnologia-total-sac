@@ -654,7 +654,7 @@ tr:hover {
 }
 
 .action-btn[title*="PDF"] {
-  background: var(--danger);
+  background: var(--secondary);
 }
 
 .action-btn[title*="PDF"]:hover {
