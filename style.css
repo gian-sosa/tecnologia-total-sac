@@ -109,6 +109,26 @@ body {
   transform: rotate(-45deg) translate(6px, -6px);
 }
 
+/* Overlay para el menú móvil - Global */
+.mobile-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+  z-index: 999;
+  pointer-events: none;
+}
+
+.mobile-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
 /* Media queries para responsive */
 @media (max-width: 768px) {
   .header {
@@ -126,27 +146,6 @@ body {
   .hamburger {
     display: flex;
     z-index: 1001;
-  }
-
-  /* Overlay para el menú móvil */
-  .mobile-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(0, 0, 0, 0.5);
-    opacity: 0;
-    visibility: hidden;
-    transition: all 0.3s ease;
-    z-index: 999;
-    pointer-events: none;
-  }
-
-  .mobile-overlay.active {
-    opacity: 1;
-    visibility: visible;
-    pointer-events: auto;
   }
 
   .nav {

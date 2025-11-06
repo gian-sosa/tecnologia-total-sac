@@ -137,14 +137,33 @@ async function loadAllData() {
 
 // Navigation
 function showView(viewId) {
-  document
-    .querySelectorAll(".view")
-    .forEach((v) => v.classList.remove("active"));
-  document
-    .querySelectorAll(".nav-btn")
-    .forEach((b) => b.classList.remove("active"));
-  document.getElementById(viewId).classList.add("active");
-  event.target.classList.add("active");
+  // Ocultar todas las vistas
+  document.querySelectorAll('.view').forEach(view => {
+    view.classList.remove('active');
+  });
+  
+  // Mostrar la vista seleccionada
+  const targetView = document.getElementById(viewId);
+  if (targetView) {
+    targetView.classList.add('active');
+  }
+  
+  // Actualizar botones de navegación
+  document.querySelectorAll('.nav-btn').forEach(btn => {
+    btn.classList.remove('active');
+  });
+  
+  // Activar el botón correspondiente
+  const activeBtn = document.querySelector(`.nav-btn[onclick*="${viewId}"]`);
+  if (activeBtn) {
+    activeBtn.classList.add('active');
+  }
+  
+  // Cerrar menú móvil si está abierto
+  const nav = document.getElementById("mainNav");
+  if (nav && nav.classList.contains("mobile-open")) {
+    closeMobileMenu();
+  }
 }
 
 // Cliente Form
@@ -374,6 +393,9 @@ function renderClientes() {
                         <button class="action-btn" onclick="viewCliente(${
                           c.id
                         })" title="Ver detalle">👁️</button>
+                        <button class="action-btn" onclick="editCliente(${
+                          c.id
+                        })" title="Editar">✏️</button>
                         <button class="action-btn" onclick="deleteCliente(${
                           c.id
                         })" title="Eliminar">🗑️</button>
@@ -1344,6 +1366,159 @@ function viewCliente(id) {
   showModal(content);
 }
 
+function editCliente(id) {
+  const cliente = clientes.find((c) => c.id == id);
+  if (!cliente) {
+    alert("Cliente no encontrado");
+    return;
+  }
+
+  const content = `
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Editar Cliente</h2>
+        <button class="close-btn" onclick="closeModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="editClienteForm">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="editTipoDoc">Tipo de Documento:</label>
+              <select id="editTipoDoc" required>
+                <option value="DNI" ${
+                  cliente.tipoDoc === "DNI" ? "selected" : ""
+                }>DNI</option>
+                <option value="CE" ${
+                  cliente.tipoDoc === "CE" ? "selected" : ""
+                }>Carné de Extranjería</option>
+                <option value="RUC" ${
+                  cliente.tipoDoc === "RUC" ? "selected" : ""
+                }>RUC</option>
+                <option value="Pasaporte" ${
+                  cliente.tipoDoc === "Pasaporte" ? "selected" : ""
+                }>Pasaporte</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="editNumDoc">Número de Documento:</label>
+              <input type="text" id="editNumDoc" value="${
+                cliente.numDoc
+              }" required>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="editNombres">Nombres:</label>
+              <input type="text" id="editNombres" value="${
+                cliente.nombres
+              }" required>
+            </div>
+
+            <div class="form-group">
+              <label for="editApellidos">Apellidos:</label>
+              <input type="text" id="editApellidos" value="${
+                cliente.apellidos
+              }" required>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="editTelefono">Teléfono:</label>
+              <input type="tel" id="editTelefono" value="${
+                cliente.telefono || ""
+              }">
+            </div>
+
+            <div class="form-group">
+              <label for="editEmail">Email:</label>
+              <input type="email" id="editEmail" value="${cliente.email || ""}">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="editDireccion">Dirección:</label>
+            <textarea id="editDireccion" rows="3">${
+              cliente.direccion || ""
+            }</textarea>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+            <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  `;
+
+  showModal(content);
+
+  // Agregar event listener al formulario
+  document
+    .getElementById("editClienteForm")
+    .addEventListener("submit", async function (e) {
+      e.preventDefault();
+      await saveClienteChanges(id);
+    });
+}
+
+async function saveClienteChanges(id) {
+  const tipoDoc = document.getElementById("editTipoDoc").value;
+  const numDoc = document.getElementById("editNumDoc").value;
+  const nombres = document.getElementById("editNombres").value;
+  const apellidos = document.getElementById("editApellidos").value;
+  const telefono = document.getElementById("editTelefono").value;
+  const email = document.getElementById("editEmail").value;
+  const direccion = document.getElementById("editDireccion").value;
+
+  if (!tipoDoc || !numDoc || !nombres || !apellidos) {
+    alert("Por favor complete todos los campos obligatorios");
+    return;
+  }
+
+  try {
+    const { error } = await supabase
+      .from("clientes")
+      .update({
+        tipo_doc: tipoDoc,
+        num_doc: numDoc,
+        nombres: nombres,
+        apellidos: apellidos,
+        telefono: telefono || null,
+        email: email || null,
+        direccion: direccion || null,
+      })
+      .eq("id", id);
+
+    if (error) throw error;
+
+    // Actualizar en el array local
+    const clienteIndex = clientes.findIndex((c) => c.id == id);
+    if (clienteIndex !== -1) {
+      clientes[clienteIndex] = {
+        ...clientes[clienteIndex],
+        tipoDoc: tipoDoc,
+        numDoc: numDoc,
+        nombres: nombres,
+        apellidos: apellidos,
+        telefono: telefono,
+        email: email,
+        direccion: direccion,
+      };
+    }
+
+    closeModal();
+    renderClientes();
+    alert("Cliente actualizado exitosamente");
+  } catch (error) {
+    console.error("Error al actualizar cliente:", error);
+    alert("Error al actualizar el cliente: " + error.message);
+  }
+}
+
 function viewProducto(id) {
   const producto = productos.find((p) => p.id == id);
   if (!producto) {
@@ -1804,9 +1979,11 @@ function toggleMobileMenu() {
   const hamburger = document.querySelector(".hamburger");
   const overlay = document.getElementById("mobileOverlay");
 
-  nav.classList.toggle("mobile-open");
-  hamburger.classList.toggle("active");
-  overlay.classList.toggle("active");
+  if (nav && hamburger && overlay) {
+    nav.classList.toggle("mobile-open");
+    hamburger.classList.toggle("active");
+    overlay.classList.toggle("active");
+  }
 }
 
 // Función para cerrar el menú móvil
@@ -1815,30 +1992,31 @@ function closeMobileMenu() {
   const hamburger = document.querySelector(".hamburger");
   const overlay = document.getElementById("mobileOverlay");
 
-  nav.classList.remove("mobile-open");
-  hamburger.classList.remove("active");
-  overlay.classList.remove("active");
+  if (nav && hamburger && overlay) {
+    nav.classList.remove("mobile-open");
+    hamburger.classList.remove("active");
+    overlay.classList.remove("active");
+  }
 }
 
-// Cerrar menú móvil al hacer clic en un enlace de navegación
+// Inicialización adicional para el menú responsive
 document.addEventListener("DOMContentLoaded", function () {
-  const navButtons = document.querySelectorAll(".nav-btn");
-
-  navButtons.forEach((button) => {
-    button.addEventListener("click", function (e) {
-      // Asegurar que el evento se propague correctamente
-      e.stopPropagation();
-
-      // Si estamos en móvil y el menú está abierto, cerrarlo
-      const nav = document.getElementById("mainNav");
-      if (nav.classList.contains("mobile-open")) {
-        closeMobileMenu();
-      }
-    });
-  });
-
-  // Prevenir que el menú se cierre al hacer clic dentro del nav
-  document.getElementById("mainNav").addEventListener("click", function (e) {
-    e.stopPropagation();
+  // Asegurar que las funciones globales estén disponibles
+  window.toggleMobileMenu = toggleMobileMenu;
+  window.closeMobileMenu = closeMobileMenu;
+  
+  // Debug info
+  console.log("Menú responsive inicializado");
+  console.log("toggleMobileMenu disponible:", typeof window.toggleMobileMenu);
+  
+  // Verificar elementos
+  const nav = document.getElementById("mainNav");
+  const hamburger = document.querySelector(".hamburger");
+  const overlay = document.getElementById("mobileOverlay");
+  
+  console.log("Elementos encontrados:", {
+    nav: !!nav,
+    hamburger: !!hamburger,
+    overlay: !!overlay
   });
 });
