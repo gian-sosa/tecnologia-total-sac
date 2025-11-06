@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tecnología Total SAC - Servicio Técnico</title>
+    <link rel="stylesheet" href="style.css" />
+
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js"></script>
+
+    <!-- jsPDF para generación de PDFs -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  </head>
+  <body>
+    <!-- Overlay para menú móvil -->
+    <div
+      class="mobile-overlay"
+      id="mobileOverlay"
+      onclick="closeMobileMenu()"
+    ></div>
+
+    <header class="header">
+      <div class="header-content">
+        <div class="logo">Tecnología Total SAC</div>
+
+        <!-- Botón hamburguesa para móvil -->
+        <button
+          class="hamburger"
+          onclick="toggleMobileMenu()"
+          aria-label="Menú"
+        >
+          <span class="hamburger-line"></span>
+          <span class="hamburger-line"></span>
+          <span class="hamburger-line"></span>
+        </button>
+
+        <!-- Navegación principal -->
+        <nav class="nav" id="mainNav">
+          <button class="nav-btn active" onclick="showView('dashboard')">
+            Dashboard
+          </button>
+          <button class="nav-btn" onclick="showView('clientes')">
+            Clientes
+          </button>
+          <button class="nav-btn" onclick="showView('productos')">
+            Productos
+          </button>
+          <button class="nav-btn" onclick="showView('garantias')">
+            Garantías
+          </button>
+          <button class="nav-btn" onclick="showView('ordenes')">
+            Órdenes de Servicio
+          </button>
+        </nav>
+      </div>
+    </header>
+
+    <div class="container">
+      <!-- Dashboard -->
+      <div id="dashboard" class="view active">
+        <h1 class="page-title">Dashboard</h1>
+        <p class="page-subtitle">Resumen del servicio técnico</p>
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">Órdenes Activas</div>
+            <div class="stat-value" id="statActivas">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">En Diagnóstico</div>
+            <div class="stat-value" id="statDiagnostico">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">En Reparación</div>
+            <div class="stat-value" id="statReparacion">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Garantías Vigentes</div>
+            <div class="stat-value" id="statGarantias">0</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2 class="card-title">Órdenes Recientes</h2>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Orden</th>
+                  <th>Cliente</th>
+                  <th>Producto</th>
+                  <th>Estado</th>
+                  <th>Fecha Ingreso</th>
+                </tr>
+              </thead>
+              <tbody id="ordenesRecientes">
+                <tr>
+                  <td
+                    colspan="5"
+                    style="text-align: center; color: var(--text-light)"
+                  >
+                    No hay órdenes registradas
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Clientes -->
+      <div id="clientes" class="view">
+        <h1 class="page-title">Gestión de Clientes</h1>
+        <p class="page-subtitle">Administra la información de tus clientes</p>
+
+        <div class="card">
+          <h2 class="card-title">Registrar Nuevo Cliente</h2>
+          <form id="formCliente">
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Tipo Documento</label>
+                <select id="tipoDoc" required>
+                  <option value="DNI">DNI</option>
+                  <option value="RUC">RUC</option>
+                  <option value="CE">Carnet Extranjería</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Número Documento</label>
+                <input type="text" id="numDoc" required />
+              </div>
+              <div class="form-group">
+                <label>Nombres</label>
+                <input type="text" id="nombres" required />
+              </div>
+              <div class="form-group">
+                <label>Apellidos</label>
+                <input type="text" id="apellidos" required />
+              </div>
+              <div class="form-group">
+                <label>Teléfono</label>
+                <input type="tel" id="telefono" required />
+              </div>
+              <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="email" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Dirección</label>
+              <input type="text" id="direccion" />
+            </div>
+            <div class="btn-group">
+              <button type="submit" class="btn btn-primary">
+                Registrar Cliente
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <div class="card">
+          <h2 class="card-title">Lista de Clientes</h2>
+          <div class="search-box">
+            <input
+              type="text"
+              id="searchCliente"
+              placeholder="Buscar por documento, nombre o teléfono..."
+            />
+          </div>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Documento</th>
+                  <th>Nombre Completo</th>
+                  <th>Teléfono</th>
+                  <th>Email</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="tablaClientes">
+                <tr>
+                  <td
+                    colspan="5"
+                    style="text-align: center; color: var(--text-light)"
+                  >
+                    No hay clientes registrados
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Productos -->
+      <div id="productos" class="view">
+        <h1 class="page-title">Productos Adquiridos</h1>
+        <p class="page-subtitle">
+          Registra los productos vendidos con su número de serie
+        </p>
+
+        <div class="card">
+          <h2 class="card-title">Registrar Producto</h2>
+          <form id="formProducto">
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Cliente</label>
+                <select id="prodCliente" required>
+                  <option value="">Seleccione un cliente</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Tipo Comprobante</label>
+                <select id="tipoComprobante" required>
+                  <option value="Boleta">Boleta</option>
+                  <option value="Factura">Factura</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Número Comprobante</label>
+                <input
+                  type="text"
+                  id="numComprobante"
+                  placeholder="Ej: B001-00001"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label>Fecha Compra</label>
+                <input type="date" id="fechaCompra" required />
+              </div>
+              <div class="form-group">
+                <label>Categoría Producto</label>
+                <input
+                  type="text"
+                  id="categoria"
+                  placeholder="Ej: Laptop, Smartphone"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label>Marca</label>
+                <input type="text" id="marca" required />
+              </div>
+              <div class="form-group">
+                <label>Modelo</label>
+                <input type="text" id="modelo" required />
+              </div>
+              <div class="form-group">
+                <label>Número de Serie</label>
+                <input type="text" id="numSerie" required />
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Descripción/Especificaciones</label>
+              <textarea id="descripcionProd"></textarea>
+            </div>
+            <div class="btn-group">
+              <button type="submit" class="btn btn-primary">
+                Registrar Producto
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <div class="card">
+          <h2 class="card-title">Lista de Productos</h2>
+          <div class="search-box">
+            <input
+              type="text"
+              id="searchProducto"
+              placeholder="Buscar por serie, marca o modelo..."
+            />
+          </div>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>N° Serie</th>
+                  <th>Producto</th>
+                  <th>Cliente</th>
+                  <th>Comprobante</th>
+                  <th>Fecha Compra</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="tablaProductos">
+                <tr>
+                  <td
+                    colspan="6"
+                    style="text-align: center; color: var(--text-light)"
+                  >
+                    No hay productos registrados
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Garantías -->
+      <div id="garantias" class="view">
+        <h1 class="page-title">Gestión de Garantías</h1>
+        <p class="page-subtitle">Control de garantías vigentes</p>
+
+        <div class="card">
+          <h2 class="card-title">Registrar Garantía</h2>
+          <form id="formGarantia">
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Producto (N° Serie)</label>
+                <select id="garProducto" required>
+                  <option value="">Seleccione un producto</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Tipo Garantía</label>
+                <select id="tipoGarantia" required>
+                  <option value="Fabricante">Fabricante</option>
+                  <option value="Tienda">Tienda</option>
+                  <option value="Extendida">Extendida</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Fecha Inicio</label>
+                <input type="date" id="fechaInicio" required />
+              </div>
+              <div class="form-group">
+                <label>Duración (meses)</label>
+                <input type="number" id="duracionMeses" min="1" required />
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Términos y Condiciones</label>
+              <textarea
+                id="terminos"
+                placeholder="Describe qué cubre la garantía"
+              ></textarea>
+            </div>
+            <div class="btn-group">
+              <button type="submit" class="btn btn-primary">
+                Registrar Garantía
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <div class="card">
+          <h2 class="card-title">Garantías Registradas</h2>
+          <div class="search-box">
+            <input
+              type="text"
+              id="searchGarantia"
+              placeholder="Buscar por producto o cliente..."
+            />
+          </div>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Producto</th>
+                  <th>Cliente</th>
+                  <th>Tipo</th>
+                  <th>Fecha Inicio</th>
+                  <th>Fecha Fin</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody id="tablaGarantias">
+                <tr>
+                  <td
+                    colspan="6"
+                    style="text-align: center; color: var(--text-light)"
+                  >
+                    No hay garantías registradas
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Órdenes de Servicio -->
+      <div id="ordenes" class="view">
+        <h1 class="page-title">Órdenes de Servicio</h1>
+        <p class="page-subtitle">
+          Gestión de servicios técnicos y reparaciones
+        </p>
+
+        <div class="card">
+          <h2 class="card-title">Nueva Orden de Servicio</h2>
+          <form id="formOrden">
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Producto (N° Serie)</label>
+                <select id="ordenProducto" required>
+                  <option value="">Seleccione un producto</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Fecha Ingreso</label>
+                <input type="date" id="fechaIngreso" required />
+              </div>
+              <div class="form-group">
+                <label>Estado</label>
+                <select id="estadoOrden" required>
+                  <option value="Recibido">Recibido</option>
+                  <option value="En Diagnóstico">En Diagnóstico</option>
+                  <option value="En Reparación">En Reparación</option>
+                  <option value="Esperando Repuesto">Esperando Repuesto</option>
+                  <option value="Reparado">Reparado</option>
+                  <option value="Entregado">Entregado</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Prioridad</label>
+                <select id="prioridad">
+                  <option value="Normal">Normal</option>
+                  <option value="Alta">Alta</option>
+                  <option value="Urgente">Urgente</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Problema Reportado</label>
+              <textarea id="problemaReportado" required></textarea>
+            </div>
+            <div class="form-group">
+              <label>Diagnóstico</label>
+              <textarea
+                id="diagnostico"
+                placeholder="Describe el diagnóstico técnico"
+              ></textarea>
+            </div>
+            <div class="form-group">
+              <label>Reparación Realizada</label>
+              <textarea
+                id="reparacion"
+                placeholder="Detalla las reparaciones o soluciones aplicadas"
+              ></textarea>
+            </div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Repuestos Utilizados</label>
+                <input
+                  type="text"
+                  id="repuestos"
+                  placeholder="Ej: Pantalla LCD, Batería"
+                />
+              </div>
+              <div class="form-group">
+                <label>Costo Repuestos (S/)</label>
+                <input
+                  type="number"
+                  id="costoRepuestos"
+                  step="0.01"
+                  min="0"
+                  value="0"
+                />
+              </div>
+              <div class="form-group">
+                <label>Costo Mano de Obra (S/)</label>
+                <input
+                  type="number"
+                  id="costoMano"
+                  step="0.01"
+                  min="0"
+                  value="0"
+                />
+              </div>
+              <div class="form-group">
+                <label>Tiempo Atención (horas)</label>
+                <input type="number" id="tiempoAtencion" step="0.5" min="0" />
+              </div>
+            </div>
+            <div class="btn-group">
+              <button type="submit" class="btn btn-primary">Crear Orden</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="card">
+          <h2 class="card-title">Órdenes de Servicio</h2>
+          <div class="search-box">
+            <input
+              type="text"
+              id="searchOrden"
+              placeholder="Buscar por producto, cliente o estado..."
+            />
+            <select
+              id="filterEstado"
+              style="
+                padding: 0.75rem;
+                border: 1px solid var(--border);
+                border-radius: 8px;
+              "
+            >
+              <option value="">Todos los estados</option>
+              <option value="Recibido">Recibido</option>
+              <option value="En Diagnóstico">En Diagnóstico</option>
+              <option value="En Reparación">En Reparación</option>
+              <option value="Esperando Repuesto">Esperando Repuesto</option>
+              <option value="Reparado">Reparado</option>
+              <option value="Entregado">Entregado</option>
+            </select>
+          </div>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>N° Orden</th>
+                  <th>Producto</th>
+                  <th>Cliente</th>
+                  <th>Estado</th>
+                  <th>Fecha Ingreso</th>
+                  <th>Tiempo (hrs)</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="tablaOrdenes">
+                <tr>
+                  <td
+                    colspan="7"
+                    style="text-align: center; color: var(--text-light)"
+                  >
+                    No hay órdenes registradas
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Detalle Orden -->
+    <div id="modalDetalleOrden" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 class="modal-title">Detalle de Orden</h2>
+          <button class="close-btn" onclick="closeModal('modalDetalleOrden')">
+            &times;
+          </button>
+        </div>
+        <div id="detalleOrdenContent"></div>
+      </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="config.js"></script>
+    <script src="database.js"></script>
+    <script src="script-supabase.js"></script>
+  </body>
+</html>
